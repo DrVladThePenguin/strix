@@ -1,0 +1,481 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Libre+Baskerville:wght@400;700&display=swap');
+
+:root {
+  --olive-900: #1a1f14;
+  --olive-800: #252b1c;
+  --olive-700: #3d4f2f;
+  --khaki-500: #8b7355;
+  --khaki-300: #c4b498;
+  --paper: #e8dcc8;
+  --rust: #8b4545;
+  --accent: #ffe066;
+  --sky: #88ccff;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--paper);
+  background: var(--olive-900);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  height: 100%;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.screen {
+  min-height: 100%;
+  height: 100%;
+}
+
+/* Main menu */
+
+.menu-screen {
+  position: relative;
+  overflow: hidden;
+}
+
+.menu-map-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.menu-overlay {
+  position: relative;
+  z-index: 1;
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 2rem 3rem;
+  background: linear-gradient(90deg, rgba(26, 31, 20, 0.92) 0%, rgba(26, 31, 20, 0.55) 45%, rgba(26, 31, 20, 0.75) 100%);
+}
+
+.menu-header h1 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 2.8rem;
+  margin: 0.2rem 0;
+  letter-spacing: 0.04em;
+}
+
+.menu-eyebrow {
+  color: var(--khaki-500);
+  letter-spacing: 0.15em;
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.menu-subtitle {
+  color: var(--khaki-300);
+  max-width: 32rem;
+}
+
+.menu-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-width: 22rem;
+  align-self: center;
+  width: 100%;
+}
+
+.menu-btn {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--olive-700);
+  background: rgba(37, 43, 28, 0.85);
+  color: var(--paper);
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.menu-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  transform: translateX(4px);
+}
+
+.menu-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.menu-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--khaki-500);
+  letter-spacing: 0.08em;
+}
+
+/* Setup */
+
+.setup-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: radial-gradient(circle at top, #2a3224, #1a1f14);
+}
+
+.setup-panel {
+  width: min(960px, 100%);
+  background: rgba(37, 43, 28, 0.95);
+  border: 1px solid var(--olive-700);
+  padding: 1.5rem 2rem;
+}
+
+.setup-panel h1 {
+  font-family: 'Libre Baskerville', serif;
+}
+
+.step-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.step {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid transparent;
+  color: var(--khaki-500);
+}
+
+.step.active {
+  border-color: var(--khaki-500);
+  color: var(--paper);
+}
+
+.card-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.card-grid.modes {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.card {
+  text-align: left;
+  padding: 0.75rem;
+  background: var(--olive-800);
+  border: 1px solid var(--olive-700);
+  color: var(--paper);
+  cursor: pointer;
+}
+
+.card.selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(255, 224, 102, 0.25);
+}
+
+.card p {
+  font-size: 0.8rem;
+  color: var(--khaki-300);
+  margin: 0.35rem 0 0;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip,
+.secondary-btn,
+.primary-btn,
+.link-btn {
+  cursor: pointer;
+}
+
+.chip {
+  border: 1px solid var(--olive-700);
+  background: var(--olive-800);
+  color: var(--paper);
+  padding: 0.35rem 0.75rem;
+}
+
+.chip.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.field input {
+  padding: 0.5rem;
+  background: var(--olive-900);
+  border: 1px solid var(--olive-700);
+  color: var(--paper);
+}
+
+.briefing-sheet {
+  border: 1px dashed var(--khaki-500);
+  padding: 1rem;
+  font-size: 0.9rem;
+}
+
+.setup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.primary-btn {
+  background: var(--olive-700);
+  border: 1px solid var(--accent);
+  color: var(--paper);
+  padding: 0.55rem 1rem;
+}
+
+.secondary-btn {
+  background: transparent;
+  border: 1px solid var(--khaki-500);
+  color: var(--khaki-300);
+  padding: 0.55rem 1rem;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--khaki-300);
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+
+/* Game layout */
+
+.game-screen {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+  overflow: hidden;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--olive-800);
+  border-bottom: 1px solid var(--olive-700);
+  font-size: 0.8rem;
+}
+
+.top-left,
+.top-center,
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.muted {
+  color: var(--khaki-500);
+}
+
+.game-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 240px;
+  min-height: 0;
+}
+
+.panel {
+  background: rgba(26, 31, 20, 0.95);
+  border-color: var(--olive-700);
+  border-style: solid;
+  padding: 0.6rem;
+  overflow: auto;
+  font-size: 0.78rem;
+}
+
+.left-panel {
+  border-right-width: 1px;
+}
+
+.right-panel {
+  border-left-width: 1px;
+}
+
+.panel h2 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 1rem;
+  margin: 0 0 0.35rem;
+}
+
+.panel-hint {
+  color: var(--khaki-500);
+  margin: 0 0 0.75rem;
+}
+
+.org-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.org-header {
+  color: var(--khaki-500);
+  font-weight: 600;
+  margin: 0.6rem 0 0.25rem;
+  letter-spacing: 0.05em;
+}
+
+.org-item {
+  width: 100%;
+  text-align: left;
+  background: var(--olive-800);
+  border: 1px solid transparent;
+  color: var(--paper);
+  padding: 0.45rem;
+  margin-bottom: 0.35rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.org-item.selected {
+  border-color: var(--accent);
+}
+
+.org-meta,
+.org-bars {
+  color: var(--khaki-500);
+  font-size: 0.68rem;
+}
+
+.battlefield-wrap {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  background: #0f120c;
+}
+
+.phaser-host {
+  width: 100%;
+  height: 100%;
+}
+
+.phaser-host canvas {
+  display: block;
+}
+
+.map-hint {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  font-size: 0.65rem;
+  color: var(--khaki-300);
+  background: rgba(26, 31, 20, 0.75);
+  padding: 0.35rem 0.5rem;
+  pointer-events: none;
+}
+
+.order-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+}
+
+.order-btn {
+  position: relative;
+  padding: 0.45rem;
+  background: var(--olive-800);
+  border: 1px solid var(--olive-700);
+  color: var(--paper);
+  cursor: pointer;
+  font-size: 0.72rem;
+}
+
+.order-btn.active {
+  border-color: var(--sky);
+  color: var(--sky);
+}
+
+.order-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.order-btn .tag {
+  display: block;
+  font-size: 0.6rem;
+  color: var(--rust);
+}
+
+.cancel-order {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+.bottom-panel {
+  border-top: 1px solid var(--olive-700);
+  background: var(--olive-800);
+  padding: 0.35rem 0.75rem;
+  max-height: 120px;
+  overflow: auto;
+}
+
+.bottom-panel h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  color: var(--khaki-500);
+}
+
+.log-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.72rem;
+}
+
+.log-list li {
+  display: grid;
+  grid-template-columns: 3.5rem 4.5rem 1fr;
+  gap: 0.5rem;
+  padding: 0.15rem 0;
+  border-bottom: 1px solid rgba(61, 79, 47, 0.35);
+}
+
+.log-cat {
+  text-transform: uppercase;
+  color: var(--khaki-500);
+}
+
+.log-cat.command {
+  color: var(--sky);
+}
+
+.log-cat.combat {
+  color: var(--rust);
+}
+
+@media (max-width: 900px) {
+  .game-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 180px 1fr 200px;
+  }
+}
