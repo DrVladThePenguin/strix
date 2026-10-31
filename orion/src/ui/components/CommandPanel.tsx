@@ -1,8 +1,20 @@
-import { useGameStore, INFANTRY_ORDERS } from '../../store/gameStore';
+import { useGameStore, INFANTRY_ORDERS, TANK_ORDERS, getFormationKind } from '../../store/gameStore';
 import { GameBridge } from '../../game/GameBridge';
 import type { OrderId } from '../../types/game';
 
-const IMPLEMENTED: OrderId[] = ['move', 'cover'];
+const INFANTRY_IMPLEMENTED: OrderId[] = [
+  'move',
+  'attack',
+  'suppress',
+  'defend',
+  'hold',
+  'retreat',
+  'cover',
+  'capture',
+  'overwatch',
+];
+
+const TANK_IMPLEMENTED: OrderId[] = ['move', 'attack', 'suppress', 'defend', 'hold', 'retreat', 'overwatch'];
 
 export function CommandPanel() {
   const selected = useGameStore((s) => s.selectedFormationIds);
@@ -10,6 +22,10 @@ export function CommandPanel() {
   const setPendingOrder = useGameStore((s) => s.setPendingOrder);
 
   const hasSelection = selected.length > 0;
+  const kinds = selected.map((id) => getFormationKind(id));
+  const tankMode = kinds.length > 0 && kinds.every((k) => k === 'tank_platoon');
+  const orders = tankMode ? TANK_ORDERS : INFANTRY_ORDERS;
+  const implemented = tankMode ? TANK_IMPLEMENTED : INFANTRY_IMPLEMENTED;
 
   const activateOrder = (orderId: OrderId) => {
     if (!hasSelection) return;
@@ -19,7 +35,7 @@ export function CommandPanel() {
 
   return (
     <aside className="panel right-panel">
-      <h2>Command Interface</h2>
+      <h2>{tankMode ? 'Armour Commands' : 'Infantry Commands'}</h2>
       {!hasSelection ? (
         <p className="panel-hint">Select a formation on the map or organisation panel.</p>
       ) : (
@@ -29,19 +45,19 @@ export function CommandPanel() {
         </p>
       )}
       <div className="order-grid">
-        {INFANTRY_ORDERS.map((order) => {
+        {orders.map((order) => {
           const active = pendingOrder?.orderId === order.id;
           return (
             <button
               key={order.id}
               type="button"
               className={active ? 'order-btn active' : 'order-btn'}
-              disabled={!hasSelection || !IMPLEMENTED.includes(order.id)}
+              disabled={!hasSelection || !implemented.includes(order.id)}
               title={order.hint}
               onClick={() => activateOrder(order.id)}
             >
               <span>{order.label}</span>
-              {!IMPLEMENTED.includes(order.id) && <span className="tag">Soon</span>}
+              {!implemented.includes(order.id) && <span className="tag">Soon</span>}
             </button>
           );
         })}

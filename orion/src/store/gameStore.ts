@@ -7,6 +7,7 @@ import type {
   OrderId,
   PendingOrder,
   ScreenId,
+  FormationKind,
 } from '../types/game';
 import { getBattlefield } from '../data/battlefields';
 
@@ -34,6 +35,8 @@ function buildFormationTree(): FormationMeta[] {
     { id: 'hq', name: 'Company Headquarters', kind: 'company_hq', parentId: null, soldierCount: 4 },
     { id: 'plt-1', name: '1st Platoon', kind: 'rifle_squad', parentId: 'hq', soldierCount: 0 },
     { id: 'plt-2', name: '2nd Platoon', kind: 'rifle_squad', parentId: 'hq', soldierCount: 0 },
+    { id: 'armor', name: 'Armoured Element', kind: 'tank_platoon', parentId: 'hq', soldierCount: 0 },
+    { id: 'tk-1', name: '1st Tank Platoon', kind: 'tank_platoon', parentId: 'armor', soldierCount: 3 },
     { id: 'support', name: 'Support Element', kind: 'mortar_team', parentId: 'hq', soldierCount: 0 },
     ...squads,
   ];
@@ -177,15 +180,29 @@ export function getFormationById(id: string): FormationMeta | undefined {
   return useGameStore.getState().formations.find((f) => f.id === id);
 }
 
+export function getFormationKind(id: string): FormationKind | undefined {
+  return getFormationById(id)?.kind;
+}
+
 export const INFANTRY_ORDERS: { id: OrderId; label: string; hint: string }[] = [
   { id: 'move', label: 'Move', hint: 'Click destination on the map.' },
-  { id: 'attack', label: 'Attack', hint: 'Click enemy formation or position.' },
+  { id: 'attack', label: 'Attack', hint: 'Click enemy position or objective.' },
   { id: 'suppress', label: 'Suppress', hint: 'Sustained fire on an area.' },
   { id: 'defend', label: 'Defend', hint: 'Establish defensive positions.' },
   { id: 'hold', label: 'Hold Position', hint: 'Remain and engage in range.' },
   { id: 'retreat', label: 'Retreat', hint: 'Withdraw to a rally point.' },
   { id: 'flank', label: 'Flank', hint: 'Approach target from the flank.' },
   { id: 'cover', label: 'Take Cover', hint: 'Seek nearby cover immediately.' },
-  { id: 'patrol', label: 'Patrol', hint: 'Patrol between waypoints.' },
+  { id: 'capture', label: 'Capture', hint: 'Advance to capture an objective.' },
   { id: 'overwatch', label: 'Overwatch', hint: 'Cover a designated area.' },
+];
+
+export const TANK_ORDERS: { id: OrderId; label: string; hint: string }[] = [
+  { id: 'move', label: 'Move', hint: 'Move platoon to destination.' },
+  { id: 'attack', label: 'Engage Armour', hint: 'Advance and engage enemy armour.' },
+  { id: 'suppress', label: 'Suppress', hint: 'Fire on area targets.' },
+  { id: 'defend', label: 'Defend', hint: 'Hold a defensive sector.' },
+  { id: 'hold', label: 'Hold Position', hint: 'Remain and engage.' },
+  { id: 'retreat', label: 'Retreat', hint: 'Withdraw to rally point.' },
+  { id: 'overwatch', label: 'Overwatch', hint: 'Overwatch a sector.' },
 ];

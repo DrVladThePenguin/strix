@@ -50,6 +50,8 @@ export function registerBattlefieldTextures(scene: Phaser.Scene): void {
   for (const faction of Object.values(FACTIONS)) {
     createSoldierTexture(scene, g, faction.id, faction.primaryColor, faction.helmetColor, false);
     createSoldierTexture(scene, g, faction.id, faction.secondaryColor, faction.helmetColor, true);
+    createTankTextures(g, faction.id, faction.primaryColor, false);
+    createTankTextures(g, faction.id, faction.secondaryColor, true);
   }
 
   g.clear();
@@ -89,4 +91,36 @@ function createSoldierTexture(
 
 export function soldierTextureKey(factionId: FactionId, friendly: boolean): string {
   return friendly ? `soldier-${factionId}` : `soldier-${factionId}-enemy`;
+}
+
+export function tankHullTextureKey(factionId: FactionId, friendly: boolean): string {
+  return friendly ? `tank-hull-${factionId}` : `tank-hull-${factionId}-enemy`;
+}
+
+export function tankTurretTextureKey(factionId: FactionId, friendly: boolean): string {
+  return friendly ? `tank-turret-${factionId}` : `tank-turret-${factionId}-enemy`;
+}
+
+function createTankTextures(g: Phaser.GameObjects.Graphics, factionId: FactionId, body: number, friendly: boolean) {
+  const hullKey = tankHullTextureKey(factionId, friendly);
+  g.clear();
+  g.fillStyle(0x000000, 0.4);
+  g.fillEllipse(16, 22, 24, 8);
+  g.fillStyle(body, 1);
+  g.fillRect(4, 8, 24, 16);
+  g.fillStyle(body - 0x101010, 1);
+  g.fillRect(2, 12, 4, 8);
+  g.fillRect(26, 12, 4, 8);
+  if (!friendly) {
+    g.lineStyle(1, 0xaa4444, 1);
+    g.strokeRect(3, 7, 26, 18);
+  }
+  g.generateTexture(hullKey, 32, 28);
+
+  const turretKey = tankTurretTextureKey(factionId, friendly);
+  g.clear();
+  g.fillStyle(body + 0x080808, 1);
+  g.fillCircle(8, 8, 7);
+  g.fillRect(8, 6, 14, 4);
+  g.generateTexture(turretKey, 24, 16);
 }

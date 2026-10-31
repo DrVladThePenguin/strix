@@ -11,6 +11,12 @@ import {
   type TerrainCell,
 } from './systems/TerrainMap';
 import { Squad, getSquadAt, getSquadSoldierAt } from './entities/Squad';
+import { TankPlatoon, getTankPlatoonAt, getTankAt } from './entities/TankPlatoon';
+import { EffectsSystem } from './systems/EffectsSystem';
+import { ProjectileSystem } from './systems/ProjectileSystem';
+import { ObjectiveSystem } from './systems/ObjectiveSystem';
+import { EnemyCommander } from './systems/EnemyCommander';
+import type { BattleContext } from './entities/BattleContext';
 
 interface SceneData {
   operation: OperationConfig;
@@ -20,7 +26,8 @@ export class BattlefieldScene extends Phaser.Scene {
   private operation!: OperationConfig;
   private terrain!: TerrainMapData;
   private squads: Squad[] = [];
-  private selectedSquadIds = new Set<string>();
+  private tankPlatoons: TankPlatoon[] = [];
+  private selectedIds = new Set<string>();
   private pendingOrder: OrderId | null = null;
   private pendingFormationIds: string[] = [];
   private orderMarker: Phaser.GameObjects.Graphics | null = null;
@@ -30,6 +37,13 @@ export class BattlefieldScene extends Phaser.Scene {
   private cameraDragStart = { x: 0, y: 0, scrollX: 0, scrollY: 0 };
   private gridLabel!: Phaser.GameObjects.Text;
   private clockSync = 0;
+  private statusSync = 0;
+
+  private effects!: EffectsSystem;
+  private projectiles!: ProjectileSystem;
+  private objectives!: ObjectiveSystem;
+  private enemyCommander = new EnemyCommander();
+  private ctx!: BattleContext;
 
   constructor() {
     super({ key: 'BattlefieldScene' });
@@ -44,14 +58,22 @@ export class BattlefieldScene extends Phaser.Scene {
     const bf = getBattlefield(this.operation.battlefield);
     this.terrain = generateTerrain(bf.seed);
 
+    this.effects = new EffectsSystem(this);
+    this.projectiles = new ProjectileSystem(this);
+    this.objectives = new ObjectiveSystem(this);
+
     this.renderTerrain();
     this.spawnForces();
 
     const worldW = this.terrain.cols * TILE_SIZE;
     const worldH = this.terrain.rows * TILE_SIZE;
+    this.objectives.setupDefaults(worldW, worldH);
+
     this.cameras.main.setBounds(0, 0, worldW, worldH);
     this.cameras.main.setZoom(0.85);
     this.cameras.main.centerOn(worldW * 0.28, worldH * 0.55);
+
+    this.ctx = this.buildContext();
 
     this.gridLabel = this.add
       .text(12, 12, '', {
@@ -69,6 +91,37 @@ export class BattlefieldScene extends Phaser.Scene {
 
     this.setupInput();
     this.events.on('shutdown', () => this.cleanup());
+  }
+
+  private buildContext(): BattleContext {
+    return {
+      terrain: this.terrain,
+      squads: this.squads,
+      tankPlatoons: this.tankPlatoons,
+      projectiles: this.projectiles,
+      effects: this.effects,
+      objectives: this.objectives,
+      onCasualty: (soldier, squad) => {
+        if (squad.friendly) {
+          useGameStore.getState().pushLog({
+            category: 'casualty',
+            message: `Casualty reported in ${squad.name}.`,
+          });
+        }
+        void soldier;
+      },
+      onTankDestroyed: (tank, platoon) => {
+        if (platoon.friendly) {
+          useGameStore.getState().pushLog({
+            category: 'combat',
+            message: `${platoon.name}: ${tank.def.name} destroyed.`,
+          });
+        }
+      },
+      logCombat: (msg) => {
+        useGameStore.getState().pushLog({ category: 'combat', message: msg });
+      },
+    };
   }
 
   private renderTerrain() {
@@ -93,20 +146,23 @@ export class BattlefieldScene extends Phaser.Scene {
       this.squads.push(new Squad(this, s.id, s.name, player, true, s.x, s.y, s.count));
     }
 
+    this.tankPlatoons.push(new TankPlatoon(this, 'tk-1', '1st Tank Platoon', player, true, 650, 2350, 3));
+
     const enemySquads = [
       { id: 'en-1', name: 'Enemy Rifle Squad', x: 2800, y: 1800, count: 10 },
-      { id: 'en-2', name: 'Enemy MG Team', x: 3000, y: 1900, count: 8 },
+      { id: 'en-2', name: 'Enemy MG Team', x: 3000, y: 1900, count: 8, mg: true },
     ];
     for (const s of enemySquads) {
-      this.squads.push(new Squad(this, s.id, s.name, enemy, false, s.x, s.y, s.count));
+      this.squads.push(new Squad(this, s.id, s.name, enemy, false, s.x, s.y, s.count, s.mg));
     }
+
+    this.tankPlatoons.push(new TankPlatoon(this, 'en-tk', 'Enemy Panzer Platoon', enemy, false, 3100, 1750, 2));
   }
 
   private setupInput() {
     this.input.on('wheel', (_pointer: Phaser.Input.Pointer, _gos: unknown, _dx: number, dy: number) => {
       const cam = this.cameras.main;
-      const newZoom = Phaser.Math.Clamp(cam.zoom - dy * 0.0015, 0.35, 2.5);
-      cam.setZoom(newZoom);
+      cam.setZoom(Phaser.Math.Clamp(cam.zoom - dy * 0.0015, 0.35, 2.5));
     });
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -120,17 +176,14 @@ export class BattlefieldScene extends Phaser.Scene {
         };
         return;
       }
-
       if (pointer.rightButtonDown() && this.pendingOrder) {
         this.clearOrderMode();
         return;
       }
-
       if (this.pendingOrder && pointer.leftButtonDown()) {
         this.executePendingOrder(pointer.worldX, pointer.worldY);
         return;
       }
-
       if (pointer.leftButtonDown()) {
         this.dragStart = { x: pointer.worldX, y: pointer.worldY };
       }
@@ -145,18 +198,13 @@ export class BattlefieldScene extends Phaser.Scene {
         cam.scrollY = this.cameraDragStart.scrollY - dy;
         return;
       }
-
       this.gridLabel.setText(
         `GRID ${Math.floor(pointer.worldX / TILE_SIZE)}:${Math.floor(pointer.worldY / TILE_SIZE)}  ZOOM ${this.cameras.main.zoom.toFixed(2)}`,
       );
-
       if (this.dragStart && pointer.leftButtonDown()) {
         this.drawSelectionRect(this.dragStart.x, this.dragStart.y, pointer.worldX, pointer.worldY);
       }
-
-      if (this.pendingOrder === 'move') {
-        this.drawOrderMarker(pointer.worldX, pointer.worldY);
-      }
+      if (this.pendingOrder) this.drawOrderMarker(pointer.worldX, pointer.worldY);
     });
 
     this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
@@ -164,7 +212,6 @@ export class BattlefieldScene extends Phaser.Scene {
         this.isDraggingCamera = false;
         return;
       }
-
       if (this.dragStart && pointer.leftButtonReleased()) {
         const dx = Math.abs(pointer.worldX - this.dragStart.x);
         const dy = Math.abs(pointer.worldY - this.dragStart.y);
@@ -200,6 +247,11 @@ export class BattlefieldScene extends Phaser.Scene {
   }
 
   private handleClickSelect(worldX: number, worldY: number, additive: boolean) {
+    const tankPlatoon = getTankAt(this.tankPlatoons, worldX, worldY) ?? getTankPlatoonAt(this.tankPlatoons, worldX, worldY);
+    if (tankPlatoon?.friendly) {
+      this.setSelection([tankPlatoon.id], additive);
+      return;
+    }
     const soldier = getSquadSoldierAt(
       this.squads.filter((s) => s.friendly),
       worldX,
@@ -229,10 +281,19 @@ export class BattlefieldScene extends Phaser.Scene {
     const ids: string[] = [];
     for (const squad of this.squads) {
       if (!squad.friendly) continue;
-      for (const soldier of squad.soldiers) {
+      for (const soldier of squad.livingSoldiers()) {
         const pos = soldier.getPosition();
         if (pos.x >= minX && pos.x <= maxX && pos.y >= minY && pos.y <= maxY) {
           ids.push(squad.id);
+          break;
+        }
+      }
+    }
+    for (const tp of this.tankPlatoons) {
+      if (!tp.friendly) continue;
+      for (const t of tp.livingTanks()) {
+        if (t.hull.x >= minX && t.hull.x <= maxX && t.hull.y >= minY && t.hull.y <= maxY) {
+          ids.push(tp.id);
           break;
         }
       }
@@ -241,20 +302,20 @@ export class BattlefieldScene extends Phaser.Scene {
   }
 
   setSelection(ids: string[], additive: boolean) {
-    if (!additive) this.selectedSquadIds.clear();
-    for (const id of ids) this.selectedSquadIds.add(id);
-    for (const squad of this.squads) {
-      squad.setSelected(this.selectedSquadIds.has(squad.id));
-    }
-    const formationIds = [...this.selectedSquadIds];
+    if (!additive) this.selectedIds.clear();
+    for (const id of ids) this.selectedIds.add(id);
+    for (const squad of this.squads) squad.setSelected(this.selectedIds.has(squad.id));
+    for (const tp of this.tankPlatoons) tp.setSelected(this.selectedIds.has(tp.id));
+    const formationIds = [...this.selectedIds];
     GameBridge.emitSelection(formationIds);
     useGameStore.getState().selectFormations(formationIds);
   }
 
   focusFormation(formationId: string) {
     const squad = this.squads.find((s) => s.id === formationId);
-    if (!squad) return;
-    const c = squad.getCenter();
+    const platoon = this.tankPlatoons.find((p) => p.id === formationId);
+    const c = squad?.getCenter() ?? platoon?.getCenter();
+    if (!c) return;
     this.cameras.main.pan(c.x, c.y, 400, 'Sine.easeInOut');
     this.setSelection([formationId], false);
   }
@@ -276,28 +337,44 @@ export class BattlefieldScene extends Phaser.Scene {
     if (!this.pendingOrder) return;
     const order = this.pendingOrder;
     const ids =
-      this.pendingFormationIds.length > 0
-        ? this.pendingFormationIds
-        : [...this.selectedSquadIds];
+      this.pendingFormationIds.length > 0 ? this.pendingFormationIds : [...this.selectedIds];
     for (const id of ids) {
       const squad = this.squads.find((s) => s.id === id);
-      if (!squad || !squad.friendly) continue;
-      squad.issueOrder(this.terrain, order, worldX, worldY);
-      useGameStore.getState().updateFormationStatus(id, {
-        currentOrder: squad.orderLabel,
-      });
+      const platoon = this.tankPlatoons.find((p) => p.id === id);
+      if (squad?.friendly) {
+        squad.issueOrder(this.terrain, order, worldX, worldY);
+        this.syncOneFormation(id, squad.orderLabel, squad.statusSnapshot());
+      } else if (platoon?.friendly) {
+        platoon.issueOrder(this.terrain, order, worldX, worldY);
+        this.syncOneFormation(id, platoon.orderLabel, platoon.statusSnapshot());
+      }
       useGameStore.getState().pushLog({
         category: 'command',
-        message: `${squad.name}: ${squad.orderLabel}`,
+        message: `${squad?.name ?? platoon?.name}: ${squad?.orderLabel ?? platoon?.orderLabel}`,
       });
     }
     this.clearOrderMode();
   }
 
+  private syncOneFormation(
+    id: string,
+    order: string,
+    snap: { strength: number; healthPct: number; ammoPct: number; moralePct: number },
+  ) {
+    useGameStore.getState().updateFormationStatus(id, {
+      currentOrder: order,
+      strength: snap.strength,
+      healthPct: Math.round(snap.healthPct),
+      ammoPct: Math.round(snap.ammoPct),
+      moralePct: Math.round(snap.moralePct),
+      available: snap.strength > 0,
+    });
+  }
+
   issueOrder(ids: string[], order: OrderId, x: number, y: number) {
     for (const id of ids) {
-      const squad = this.squads.find((s) => s.id === id);
-      squad?.issueOrder(this.terrain, order, x, y);
+      this.squads.find((s) => s.id === id)?.issueOrder(this.terrain, order, x, y);
+      this.tankPlatoons.find((p) => p.id === id)?.issueOrder(this.terrain, order, x, y);
     }
   }
 
@@ -308,20 +385,41 @@ export class BattlefieldScene extends Phaser.Scene {
   update(_time: number, delta: number) {
     const deltaSec = delta / 1000;
     const store = useGameStore.getState();
-    if (!store.paused) {
+    if (store.paused) return;
+
+    const speed = deltaSec * store.gameSpeed;
+    for (const squad of this.squads) squad.update(speed, this.terrain, this.ctx);
+    for (const tp of this.tankPlatoons) tp.update(speed, this.terrain, this.ctx);
+    this.projectiles.update(speed, this.ctx);
+    this.objectives.update(speed, this.ctx);
+    this.enemyCommander.update(speed, this.terrain, this.ctx);
+
+    this.statusSync += speed;
+    if (this.statusSync > 0.4) {
       for (const squad of this.squads) {
-        squad.update(deltaSec * store.gameSpeed, this.terrain);
+        if (!squad.friendly) continue;
+        this.syncOneFormation(squad.id, squad.orderLabel, squad.statusSnapshot());
       }
-      this.clockSync += deltaSec;
-      if (this.clockSync > 0.25) {
-        store.tickBattleClock(this.clockSync);
-        this.clockSync = 0;
+      for (const tp of this.tankPlatoons) {
+        if (!tp.friendly) continue;
+        this.syncOneFormation(tp.id, tp.orderLabel, tp.statusSnapshot());
       }
+      this.statusSync = 0;
+    }
+
+    this.clockSync += speed;
+    if (this.clockSync > 0.25) {
+      store.tickBattleClock(this.clockSync);
+      this.clockSync = 0;
     }
   }
 
   private cleanup() {
     for (const squad of this.squads) squad.destroy();
+    for (const tp of this.tankPlatoons) tp.destroy();
     this.squads = [];
+    this.tankPlatoons = [];
+    this.projectiles.clear();
+    this.objectives.destroy();
   }
 }
