@@ -1,0 +1,136 @@
+.main-menu {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #d4c4a8;
+  font-family: 'Courier New', Courier, monospace;
+  overflow: hidden;
+}
+
+.main-menu__map-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(42, 48, 32, 0.92), rgba(58, 42, 32, 0.88)),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 48px,
+      rgba(90, 100, 70, 0.08) 48px,
+      rgba(90, 100, 70, 0.08) 49px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 48px,
+      rgba(90, 100, 70, 0.08) 48px,
+      rgba(90, 100, 70, 0.08) 49px
+    ),
+    #3a4230;
+  animation: map-drift 60s linear infinite;
+}
+
+@keyframes map-drift {
+  from {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  to {
+    background-position: 120px 80px, 0 48px, 48px 0;
+  }
+}
+
+.main-menu__overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.main-menu__header {
+  position: relative;
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.main-menu__theatre {
+  letter-spacing: 0.35em;
+  font-size: 0.7rem;
+  color: #8b9a6a;
+  margin: 0 0 0.5rem;
+}
+
+.main-menu__title {
+  font-size: 2.8rem;
+  letter-spacing: 0.2em;
+  margin: 0;
+  color: #e8dcc8;
+  text-shadow: 2px 2px 0 #2a2018;
+}
+
+.main-menu__subtitle {
+  margin: 0.75rem 0 0;
+  color: #a89878;
+  font-size: 0.95rem;
+}
+
+.main-menu__nav {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 280px;
+}
+
+.main-menu__footer {
+  position: relative;
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #6a5a48;
+}
+
+.stamp {
+  border: 2px solid #6a3030;
+  color: #8b4040;
+  padding: 0.25rem 0.75rem;
+  transform: rotate(-3deg);
+  letter-spacing: 0.15em;
+}
+
+.mil-btn {
+  font-family: inherit;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid #5a6a48;
+  background: linear-gradient(180deg, #4a5238 0%, #3a4030 100%);
+  color: #d4c4a8;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.mil-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #5a6248 0%, #4a5038 100%);
+  border-color: #8b9a6a;
+}
+
+.mil-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mil-btn--primary {
+  border-color: #8b7355;
+  background: linear-gradient(180deg, #5a5040 0%, #4a4032 100%);
+}
+
+.mil-btn--primary:hover {
+  border-color: #c4a574;
+}
