@@ -1,0 +1,15 @@
+{
+  "name": "strix-workspace",
+  "private": true,
+  "description": "Strix monorepo root. Project Orion (WWII tactical sim) is in orion/.",
+  "workspaces": [
+    "orion"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w orion",
+    "build": "npm run build -w orion",
+    "preview": "npm run preview -w orion",
+    "orion:dev": "npm run dev -w orion",
+    "orion:build": "npm run build -w orion"
+  }
+}
