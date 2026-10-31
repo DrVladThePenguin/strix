@@ -1,0 +1,126 @@
+.op-setup {
+  min-height: 100vh;
+  background: #2a3028;
+  color: #d4c4a8;
+  font-family: 'Courier New', Courier, monospace;
+  padding: 1.5rem 2rem 2rem;
+}
+
+.op-setup__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.op-setup__header h1 {
+  margin: 0;
+  letter-spacing: 0.15em;
+  font-size: 1.4rem;
+}
+
+.mil-btn--small {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+.op-setup__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.op-panel {
+  background: rgba(20, 24, 18, 0.85);
+  border: 1px solid #4a5240;
+  padding: 1rem;
+}
+
+.op-panel--wide {
+  grid-column: 1 / -1;
+}
+
+.op-panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  color: #8b9a6a;
+}
+
+.op-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.op-chip {
+  font-family: inherit;
+  font-size: 0.75rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid #5a6a48;
+  background: #3a4030;
+  color: #d4c4a8;
+  cursor: pointer;
+}
+
+.op-chip--active {
+  border-color: #c4a574;
+  background: #4a5040;
+}
+
+.op-select,
+.op-input {
+  width: 100%;
+  font-family: inherit;
+  background: #1a2018;
+  border: 1px solid #5a6a48;
+  color: #d4c4a8;
+  padding: 0.5rem;
+}
+
+.op-desc,
+.op-hint {
+  font-size: 0.8rem;
+  color: #a89878;
+  margin: 0.5rem 0 0;
+}
+
+.battlefield-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+
+.bf-card {
+  font-family: inherit;
+  text-align: left;
+  padding: 0.65rem;
+  border: 1px solid #5a6a48;
+  background: #323828;
+  color: #d4c4a8;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bf-card--active {
+  border-color: #c4a574;
+  box-shadow: inset 0 0 0 1px #c4a574;
+}
+
+.bf-card__name {
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.bf-card__region {
+  font-size: 0.7rem;
+  color: #8b9a6a;
+}
+
+.op-setup__footer {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
