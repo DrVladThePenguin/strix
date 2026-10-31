@@ -154,7 +154,7 @@ export class Soldier {
     }
 
     this.combatState = 'shooting';
-    this.fireCooldown = 60 / this.weapon.rpm;
+    this.fireCooldown = (60 / this.weapon.rpm) / (this.friendly ? 1 : ctx.ai.enemyFireRateMod);
     this.roundsInMagazine -= 1;
     const tx = targetX + (suppressive ? (Math.random() - 0.5) * 40 : 0);
     const ty = targetY + (suppressive ? (Math.random() - 0.5) * 40 : 0);

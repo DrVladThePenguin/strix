@@ -1,38 +1,52 @@
 # Project Orion — Development Log
 
-## Phase 1 — Core Foundation (v0.1.0)
+## Phase 1 — Core Foundation (v0.1.0) ✓
+
+Main menu, operation setup, Phaser battlefield, individual soldiers, selection, move orders, basic pathfinding.
+
+## Phase 2 — Infantry Simulation (v0.3.0) ✓
 
 ### Implemented
-- **Architecture:** `orion/` app with React 19 (menus, panels) + Phaser 3 (battlefield), Zustand game state, `GameBridge` for UI ↔ simulation events.
-- **Main menu:** WWII headquarters theme, animated operations map background, navigation entries.
-- **Operation setup:** Faction pairing, seven game modes, four difficulties, six battlefields, operation naming and briefing.
-- **Game screen:** Top bar (time, resources, pause, speed), left organisation tree, right contextual orders, bottom radio/log panel.
-- **Battlefield:** Procedural pixel terrain (4800×3600 world), friendly and enemy squads with **individual soldier sprites** (10 soldiers per rifle squad, etc.).
-- **Camera:** Mouse-wheel zoom, right/middle-button drag pan, grid coordinate HUD.
-- **Selection:** Click soldier/squad, drag box multi-select, panel selection with camera focus.
-- **Commands:** Contextual infantry order grid; **Move** and **Take Cover** wired to squad AI; other orders shown as “Soon”.
-- **Infantry AI (basic):** A* pathfinding on terrain cost grid, per-soldier path following, formation offsets on move orders, squad cohesion markers.
-- **Modules stubbed for later phases:** `Pathfinding`, `TerrainMap`, `Soldier`, `Squad`, `BattlefieldScene`, data layers for factions/modes/maps.
+- Weapon profiles per faction (`data/weapons.ts`) with ROF, damage, range, reload, suppression
+- Line of sight (terrain blocking forests, hedgerows, buildings, water)
+- Hitscan combat with cover reducing accuracy and damage
+- Suppression meter — pinned soldiers crawl/prone and fire less effectively
+- Casualties — individual death, morale shock to squad, log entries
+- Squad orders: **attack, suppress, defend, hold, retreat, cover, capture, overwatch** (flank/patrol UI pending)
+- Cover seeking via terrain cover map
+- Capture objectives (3 zones) with progressive ownership
+- Basic enemy commander AI (attack/suppress, armour advance)
+- Live formation status sync (strength, HP, ammo, morale, orders)
 
-### Functional (tested)
-- `npm run build` succeeds.
-- Dev server runs (`npm run dev` in `orion/`).
-- Move order flow: select squad → Move → click map → soldiers pathfind and animate movement.
+### Functional
+- Firefights between US and German squads with tracers and muzzle flashes
+- Suppression and casualties affect behaviour
+- Capture zones change colour when dominated by infantry presence
 
-### Incomplete (by design — later phases)
-- Combat, suppression, casualties, morale effects
-- Tanks, aircraft, artillery, mortars
-- Fog of war, enemy commander AI, resources/reinforcements logic
-- Game mode victory conditions (UI/config only in Phase 1)
-- Entrench, attack, patrol, and remaining order implementations
-- Audio, advanced pixel art, historical scenarios
+### Incomplete
+- Entrench, patrol, flank pathing logic
+- Medic/engineer teams
+- Full morale-driven rout
 
-### Bugs discovered
-- None blocking in local build; browser QA pending full manual pass.
-- Performance: full terrain tile sprites (150×112) — acceptable for Phase 1; optimise in Phase 6.
+## Phase 3 — Armoured Warfare (v0.3.0) ✓
 
-### Next (Phase 2 — Infantry Simulation)
-- Weapon firing, line of sight, damage, suppression
-- Cover-seeking behaviour, casualties, morale
-- Attack/defend/hold order AI
-- Objective markers and capture logic foundations
+### Implemented
+- Faction medium tanks (Sherman, Panzer IV, T-34, Cromwell stats in `data/vehicles.ts`)
+- **1st Tank Platoon** (player) and enemy panzer platoon — individual hull + turret sprites
+- Hull movement with pathfinding, turret tracking, cannon reload
+- Directional armour (front/side/rear) vs shell penetration
+- Visible shell projectiles, impacts, knock-out explosions
+- Tank command panel: move, engage armour (attack), suppress, defend, hold, retreat, overwatch
+- Tanks engage infantry and enemy armour
+
+### Incomplete
+- Separate engage-infantry vs ambush/flank orders
+- Track/engine damage modules
+- M18/M10/Tiger/etc. full roster
+
+## Next — Phase 4 (Support Systems)
+
+Mortars, artillery barrages, aircraft, smoke, recon reveals.
+
+### Bugs
+- None blocking build (`npm run build` clean as of v0.3.0)

@@ -76,12 +76,15 @@ export class ProjectileSystem {
 
     const accuracy =
       weapon.accuracy *
+      (shooter.friendly ? 1 : ctx.ai.enemyAccuracyMod) *
       (1 - coverAt(ctx.terrain, targetX, targetY) * 0.45) *
       (dist / weapon.range > 0.7 ? 0.75 : 1);
 
+    const damageScale = shooter.friendly ? 1 : ctx.ai.enemyDamageMod;
+
     const hit = Math.random() < accuracy;
     if (hit) {
-      this.applyDamageAt(ctx, targetX, targetY, weapon.damage, 0, !shooter.friendly, 28);
+      this.applyDamageAt(ctx, targetX, targetY, weapon.damage * damageScale, 0, !shooter.friendly, 28);
     } else {
       this.applySuppressionAt(ctx, targetX, targetY, weapon.suppressionPerShot * 0.5, 40);
     }

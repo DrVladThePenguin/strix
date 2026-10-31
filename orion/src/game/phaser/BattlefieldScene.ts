@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { OperationConfig, OrderId } from '../../types/game';
 import { getBattlefield } from '../../data/battlefields';
+import { getAiProfile } from '../../data/difficultyAi';
 import { GameBridge } from '../GameBridge';
 import { useGameStore } from '../../store/gameStore';
 import { registerBattlefieldTextures } from './render/SpriteFactory';
@@ -90,10 +91,15 @@ export class BattlefieldScene extends Phaser.Scene {
     this.selectRect = this.add.graphics().setDepth(200);
 
     this.setupInput();
+
+    this.enemyCommander.setDifficulty(this.operation.difficulty);
+    this.enemyCommander.bootstrap(this.terrain, this.ctx);
+
     this.events.on('shutdown', () => this.cleanup());
   }
 
   private buildContext(): BattleContext {
+    const ai = getAiProfile(this.operation.difficulty);
     return {
       terrain: this.terrain,
       squads: this.squads,
@@ -101,6 +107,7 @@ export class BattlefieldScene extends Phaser.Scene {
       projectiles: this.projectiles,
       effects: this.effects,
       objectives: this.objectives,
+      ai,
       onCasualty: (soldier, squad) => {
         if (squad.friendly) {
           useGameStore.getState().pushLog({
@@ -149,14 +156,18 @@ export class BattlefieldScene extends Phaser.Scene {
     this.tankPlatoons.push(new TankPlatoon(this, 'tk-1', '1st Tank Platoon', player, true, 650, 2350, 3));
 
     const enemySquads = [
-      { id: 'en-1', name: 'Enemy Rifle Squad', x: 2800, y: 1800, count: 10 },
-      { id: 'en-2', name: 'Enemy MG Team', x: 3000, y: 1900, count: 8, mg: true },
+      { id: 'en-1', name: 'Enemy Rifle Squad', x: 2100, y: 2050, count: 10 },
+      { id: 'en-2', name: 'Enemy MG Team', x: 2250, y: 1980, count: 8, mg: true },
     ];
     for (const s of enemySquads) {
       this.squads.push(new Squad(this, s.id, s.name, enemy, false, s.x, s.y, s.count, s.mg));
     }
 
-    this.tankPlatoons.push(new TankPlatoon(this, 'en-tk', 'Enemy Panzer Platoon', enemy, false, 3100, 1750, 2));
+    if (this.operation.difficulty === 'veteran' || this.operation.difficulty === 'elite') {
+      this.squads.push(new Squad(this, 'en-3', 'Enemy Assault Squad', enemy, false, 2350, 2120, 10));
+    }
+
+    this.tankPlatoons.push(new TankPlatoon(this, 'en-tk', 'Enemy Panzer Platoon', enemy, false, 2480, 1920, 2));
   }
 
   private setupInput() {

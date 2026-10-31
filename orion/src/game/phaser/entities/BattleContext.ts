@@ -2,6 +2,7 @@ import type { TerrainMapData } from '../systems/TerrainMap';
 import type { EffectsSystem } from '../systems/EffectsSystem';
 import type { ProjectileSystem } from '../systems/ProjectileSystem';
 import type { ObjectiveSystem } from '../systems/ObjectiveSystem';
+import type { AiDifficultyProfile } from '../../../data/difficultyAi';
 import type { Soldier } from './Soldier';
 import type { Squad } from './Squad';
 import type { Tank } from './Tank';
@@ -14,6 +15,7 @@ export interface BattleContext {
   projectiles: ProjectileSystem;
   effects: EffectsSystem;
   objectives: ObjectiveSystem;
+  ai: AiDifficultyProfile;
   onCasualty: (soldier: Soldier, squad: Squad) => void;
   onTankDestroyed: (tank: Tank, platoon: TankPlatoon) => void;
   logCombat: (message: string) => void;

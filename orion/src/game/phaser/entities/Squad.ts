@@ -8,6 +8,7 @@ import { Soldier } from './Soldier';
 import type { BattleContext } from './BattleContext';
 import { mgForFaction } from '../../../data/weapons';
 import { averageMorale } from '../systems/CombatQueries';
+import { squadInContactWithEnemy } from '../systems/CombatQueries';
 
 export class Squad {
   readonly id: string;
@@ -121,8 +122,11 @@ export class Squad {
         return;
       case 'attack':
       case 'capture':
-      case 'flank':
         this.orderLabel = `${order} — advancing on objective`;
+        this.assignFormationMove(map, worldX, worldY);
+        return;
+      case 'flank':
+        this.orderLabel = 'Flanking manoeuvre';
         this.assignFormationMove(map, worldX, worldY);
         return;
       case 'suppress':
@@ -165,15 +169,17 @@ export class Squad {
   }
 
   update(deltaSec: number, map: TerrainMapData, ctx: BattleContext) {
-    const allowEngage =
-      this.currentOrder !== 'move' ||
-      this.livingSoldiers().some((s) => s.combatState !== 'moving' || s.path.length === 0);
+    const allowEngage = this.computeAllowEngage(ctx);
 
     for (const s of this.soldiers) {
       if (!s.living()) continue;
-      s.tickCombat(deltaSec, ctx, this, allowEngage || this.engageHold, this.orderPoint, this.suppressiveFire);
+      s.tickCombat(deltaSec, ctx, this, allowEngage, this.orderPoint, this.suppressiveFire);
 
-      if (this.currentOrder === 'attack' || this.currentOrder === 'capture') {
+      if (
+        this.currentOrder === 'attack' ||
+        this.currentOrder === 'capture' ||
+        this.currentOrder === 'flank'
+      ) {
         const c = this.getCenter();
         if (this.orderPoint && Math.hypot(c.x - this.orderPoint.x, c.y - this.orderPoint.y) > 60) {
           if (!this.anyMoving()) this.assignFormationMove(map, this.orderPoint.x, this.orderPoint.y);
@@ -183,6 +189,30 @@ export class Squad {
 
     const c = this.getCenter();
     this.marker.setPosition(c.x, c.y - 18);
+  }
+
+  private computeAllowEngage(ctx: BattleContext): boolean {
+    if (this.engageHold || this.suppressiveFire) return true;
+    if (
+      this.currentOrder === 'attack' ||
+      this.currentOrder === 'capture' ||
+      this.currentOrder === 'flank' ||
+      this.currentOrder === 'suppress' ||
+      this.currentOrder === 'hold' ||
+      this.currentOrder === 'defend' ||
+      this.currentOrder === 'overwatch'
+    ) {
+      return true;
+    }
+    if (!this.friendly) {
+      if (this.currentOrder === 'idle' || squadInContactWithEnemy(ctx, this, ctx.ai.contactRange + 80)) {
+        return true;
+      }
+    }
+    if (this.currentOrder === 'move') {
+      return this.livingSoldiers().some((s) => !s.isMoving() || s.path.length === 0);
+    }
+    return this.currentOrder === 'idle';
   }
 
   anyMoving(): boolean {
